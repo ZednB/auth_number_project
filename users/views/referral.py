@@ -12,6 +12,9 @@ class ActivateInviteView(views.APIView):
         phone_number = request.data.get('phone_number')
         invite_code = request.data.get('invite_code')
 
+        if not phone_number or not invite_code:
+            return Response({'error': 'Укажите номер телефона и инвайт-код'})
+
         user = get_object_or_404(User, phone_number=phone_number)
         referred_by = get_object_or_404(User, invite_code=invite_code)
 
@@ -21,7 +24,7 @@ class ActivateInviteView(views.APIView):
         user.referred_by = referred_by
         user.save()
 
-        Referral.objects.create(user=referred_by, reffered_user=user)
+        Referral.objects.create(user=referred_by, referred_user=user)
         return Response({'message': 'Инвайт код активирован'}, status=status.HTTP_200_OK)
 
 
@@ -29,5 +32,5 @@ class UserReferralsView(views.APIView):
     """Возвращает список пользователей, которые ввели инвайт-код текущего пользователя."""
     def get(self, request, phone_number):
         user = get_object_or_404(User, phone_number=phone_number)
-        referrals = user.refferals.all()
-        return Response(UserSerializer(referrals, many=True).data)
+        referred_users = [invite.referred_user for invite in user.user_referrals.all()]
+        return Response(UserSerializer(referred_users, many=True).data)

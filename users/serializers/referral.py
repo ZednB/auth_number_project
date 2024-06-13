@@ -6,4 +6,4 @@ from users.models import Referral
 class ReferralSerializer(serializers.ModelSerializer):
     class Meta:
         model = Referral
-        fields = '__all__'
+        fields = ['id', 'user', 'referred_user', 'created_at']
