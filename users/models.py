@@ -1,4 +1,5 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.db import models
 import random
 import string
@@ -6,11 +7,27 @@ import string
 NULLABLE = {'blank': True, 'null': True}
 
 
-class User(AbstractUser):
+class UserManager(BaseUserManager):
+    def create_user(self, phone_number, password=None, **extra_fields):
+        if not phone_number:
+            raise ValueError('Введите номер телефона')
+        user = self.model(phone_number=phone_number, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, phone_number, password=None, **extra_fields):
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(phone_number, password, **extra_fields)
+
+
+class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, unique=True, verbose_name='Номер телефона')
     invite_code = models.CharField(max_length=6, unique=True, **NULLABLE, verbose_name='Инвайт код')
     referred_by = models.ForeignKey('self', **NULLABLE, on_delete=models.SET_NULL, related_name='referrals')
     USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = []
+    objects = UserManager()
 
     def __str__(self):
         return f"{self.phone_number}, {self.invite_code}"
