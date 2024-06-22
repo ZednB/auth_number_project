@@ -45,7 +45,7 @@ class AuthCodeVerificationView(views.APIView):
         if auth_codes.get(phone_number) != auth_code:
             return Response({'error': 'Неправильный код авторизации.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user, created = User.objects.get_or_create(phone_number=phone_number, defaults={'username': phone_number})
+        user, created = User.objects.get_or_create(phone_number=phone_number)
         if created:
             user.set_unusable_password()
             user.save()
